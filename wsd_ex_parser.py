@@ -25,6 +25,13 @@ def logged(f):
 
 @logged
 def wsd_parser(diagram):
+    def rm_whitespace(out):
+        status, ast, state = out
+        filtered = [
+            t for t in ast[1]
+            if t[0] not in ["interstatement_ws", "eof"]]
+        return (status, (ast[0], tuple(filtered)), state)
+
     line_ending_or_eof_parser = partial(
         or_parser,
         "ignored",
@@ -33,13 +40,13 @@ def wsd_parser(diagram):
             interstatement_whitespace_parser
         ])
 
-    return one_or_many_parser(
+    return rm_whitespace(one_or_many_parser(
         "statement_list",
         [
             statement_parser,
             line_ending_or_eof_parser
         ],
-        diagram)
+        diagram))
 
 
 @logged

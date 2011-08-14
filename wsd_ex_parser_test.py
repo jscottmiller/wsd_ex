@@ -158,18 +158,13 @@ class WsdParserTests(TestCase):
              (True, 
               ("statement_list",
                (EXAMPLE_SIGNAL_PARSED,
-                ("interstatement_ws", "\n"),
-                EXAMPLE_SIGNAL_PARSED,
-                ("eof", ""))), "")),
+                EXAMPLE_SIGNAL_PARSED)), "")),
             ('\n'.join([EXAMPLE_SIGNAL] * 3), 
              (True, 
               ("statement_list",
                (EXAMPLE_SIGNAL_PARSED,
-                ("interstatement_ws", "\n"),
                 EXAMPLE_SIGNAL_PARSED,
-                ("interstatement_ws", "\n"),
-                EXAMPLE_SIGNAL_PARSED,
-                ("eof", ""))), ""))]
+                EXAMPLE_SIGNAL_PARSED)), ""))]
         self._check_expectations(
             expectations,
             wsd_parser)

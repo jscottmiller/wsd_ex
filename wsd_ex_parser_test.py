@@ -99,9 +99,9 @@ class WsdParserTests(TestCase):
 
     def test_can_parse_signal_participants(self):
         expectations = [
-            ("", (False, ("signal_participants", ""), "")),
-            ("alice->", (False, ("signal_participants", ""), "alice->")),
-            ("->bob", (False, ("signal_participants", ""), "->bob")),
+            ("", (False, ("signal_participants", ()), "")),
+            ("alice->", (False, ("signal_participants", ()), "alice->")),
+            ("->bob", (False, ("signal_participants", ()), "->bob")),
             ("alice->bob", 
              (True, 
               ("signal_participants",
@@ -137,7 +137,7 @@ class WsdParserTests(TestCase):
 
     def test_can_parse_signal(self):
         expectations = [
-            ("", (False, ("signal", ""), "")),
+            ("", (False, ("signal", ()), "")),
             (EXAMPLE_SIGNAL, (True, EXAMPLE_SIGNAL_PARSED, ""))]
         self._check_expectations(
             expectations,

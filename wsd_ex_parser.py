@@ -61,14 +61,14 @@ def statement_parser(diagram):
 
 @logged
 def signal_parser(diagram):
-    sp = signal_participants_parser(diagram)
-    c = colon_parser(sp[2])
-    sb = signal_body_line_parser(c[2])
-
-    if not (sp[0] and c[0] and sb[0]):
-        return (False, ("signal", ""), diagram)
-
-    return (True, ("signal", (sp[1], c[1], sb[1])), sb[2])
+    return list_parser(
+        "signal",
+        [
+            signal_participants_parser,
+            colon_parser,
+            signal_body_line_parser
+        ],
+        diagram)
 
 
 @logged
@@ -87,14 +87,14 @@ def signal_body_line_parser(diagram):
 
 @logged
 def signal_participants_parser(diagram):
-    p1 = left_participant_parser(diagram)
-    arrow = arrow_parser(p1[2])
-    p2 = right_participant_parser(arrow[2])
-
-    if not (p1[0] and arrow[0] and p2[0]):
-        return (False, ("signal_participants", ""), diagram)
-
-    return (True, ("signal_participants", (p1[1], arrow[1], p2[1])), p2[2])
+    return list_parser(
+        "signal_participants",
+        [
+            left_participant_parser,
+            arrow_parser,
+            right_participant_parser
+        ],
+        diagram)
 
 
 @logged
@@ -149,13 +149,14 @@ def one_or_many_parser(name, parsers, diagram):
 @logged
 def list_parser(name, parsers, diagram):
     results = []
+    rest = diagram
     for parser in parsers:
-        result = parser(diagram)
+        result = parser(rest)
         if not result[0]:
             return (False, (name, ()), diagram)
-        diagram = result[2]
+        rest = result[2]
         results.append(result[1])
-    return (True, (name, tuple(results)), diagram)
+    return (True, (name, tuple(results)), rest)
 
 
 @logged

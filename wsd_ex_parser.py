@@ -9,6 +9,7 @@ from logging import info, basicConfig
 ID_RE = compile("\w+")
 ARROW_RE = compile("\-\-?>")
 WS_RE = compile("[ \t]*")
+INTER_STATEMENT_WS_RE = compile("[ \t\n\r]*\n")
 
 
 #basicConfig(level='INFO')
@@ -24,17 +25,20 @@ def logged(f):
 
 @logged
 def wsd_parser(diagram):
-    return list_parser(
+    line_ending_or_eof_parser = partial(
+        or_parser,
+        "ignored",
+        [
+            eof_parser,
+            interstatement_whitespace_parser
+        ])
+
+    return one_or_many_parser(
         "statement_list",
-        [statement_parser,
-         partial(
-             or_parser,
-             "statement",
-             [partial(empty_parser, "nop"),
-              partial(
-                  sequence_parser,
-                  [partial(text_parser, "newline", "\n"),
-                   statement_parser])])],
+        [
+            statement_parser,
+            line_ending_or_eof_parser
+        ],
         diagram)
 
 
@@ -42,7 +46,9 @@ def wsd_parser(diagram):
 def statement_parser(diagram):
     return or_parser(
         "statement",
-        [signal_parser],
+        [
+            signal_parser
+        ],
         diagram)
 
 
@@ -62,7 +68,13 @@ def signal_parser(diagram):
 def signal_body_line_parser(diagram):
     return not_parser(
         "signal_body_line", 
-        partial(text_parser, "newline", "\n"),
+        partial(
+            or_parser,
+            "ignored",
+            [
+                interstatement_whitespace_parser,
+                eof_parser 
+            ]),
         diagram)
 
 
@@ -82,7 +94,7 @@ def signal_participants_parser(diagram):
 def left_participant_parser(diagram):
     return sequence_parser(
         [leading_whitespace_parser,
-         partial(not_parser, "participant", arrow_parser, match_empty=False)],
+         partial(not_parser, "participant", arrow_parser)],
         diagram)
 
 
@@ -90,7 +102,7 @@ def left_participant_parser(diagram):
 def right_participant_parser(diagram):
     return sequence_parser(
         [leading_whitespace_parser,
-         partial(not_parser, "participant", colon_parser, match_empty=False)],
+         partial(not_parser, "participant", colon_parser)],
         diagram)
 
 
@@ -116,14 +128,14 @@ def colon_parser(diagram):
 
 
 @logged
-def one_or_many_parser(name, parser, diagram):
+def one_or_many_parser(name, parsers, diagram):
     results = []
     while True:
-        result = parser(diagram)
+        result = list_parser(name, parsers, diagram)
         if not result[0]:
             break
         diagram = result[2]
-        results.append(result[1])
+        results.extend(list(result[1][1]))
     return (len(results) > 0, (name, tuple(results)), diagram)
 
 
@@ -150,14 +162,19 @@ def sequence_parser(parsers, diagram):
 
 
 @logged
-def leading_whitespace_parser(diagram):
-    return re_parser("whitespace", WS_RE, diagram)
+def interstatement_whitespace_parser(diagram):
+    return re_parser("interstatement_ws", INTER_STATEMENT_WS_RE, diagram)
 
 
 @logged
-def not_parser(name, parser, diagram, match_empty=True):
+def leading_whitespace_parser(diagram):
+    return re_parser("ws", WS_RE, diagram)
+
+
+@logged
+def not_parser(name, parser, diagram):
     if not diagram:
-        return (match_empty, (name, diagram), "")
+        return (False, (name, diagram), "")
     for i in range(len(diagram)):
         result = parser(diagram[i:])
         if result[0]:
@@ -175,8 +192,8 @@ def or_parser(name, parsers, diagram):
 
 
 @logged
-def empty_parser(name, diagram):
-    return (diagram=="", (name, ""), diagram)
+def eof_parser(diagram):
+    return (diagram=="", ("eof", ""), diagram)
 
 
 @logged

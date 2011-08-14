@@ -18,6 +18,10 @@ EXAMPLE_SIGNAL_PARSED = (
 
 class WsdParserTests(TestCase):
 
+    def __init__(self, *args, **kwargs):
+        super(WsdParserTests, self).__init__(*args, **kwargs)
+        self.maxDiff = None
+
     def test_can_parse_text(self):
         expectations = [
             ("", (False, ("test", ""), "")),
@@ -31,15 +35,15 @@ class WsdParserTests(TestCase):
 
     def test_can_parse_leading_whitespace(self):
         expectations = [
-            ("", (True, ("whitespace", ""), "")),
-            ("foo", (True, ("whitespace", ""), "foo")),
-            (" foo", (True, ("whitespace", " "), "foo")),
-            ("\tfoo", (True, ("whitespace", "\t"), "foo")),
-            ("  foo", (True, ("whitespace", "  "), "foo")),
-            ("\t\tfoo", (True, ("whitespace", "\t\t"), "foo")),
-            ("\t foo", (True, ("whitespace", "\t "), "foo")),
-            ("foo ", (True, ("whitespace", ""), "foo ")),
-            ("foo\t", (True, ("whitespace", ""), "foo\t"))]
+            ("", (True, ("ws", ""), "")),
+            ("foo", (True, ("ws", ""), "foo")),
+            (" foo", (True, ("ws", " "), "foo")),
+            ("\tfoo", (True, ("ws", "\t"), "foo")),
+            ("  foo", (True, ("ws", "  "), "foo")),
+            ("\t\tfoo", (True, ("ws", "\t\t"), "foo")),
+            ("\t foo", (True, ("ws", "\t "), "foo")),
+            ("foo ", (True, ("ws", ""), "foo ")),
+            ("foo\t", (True, ("ws", ""), "foo\t"))]
         self._check_expectations(
             expectations, 
             leading_whitespace_parser)
@@ -56,11 +60,11 @@ class WsdParserTests(TestCase):
                 ("colon", ":"))), ""))]
         self._check_expectations(
             expectations,
-            partial(one_or_many_parser, "test", colon_parser))
+            partial(one_or_many_parser, "test", [colon_parser]))
 
     def test_can_parse_arrow(self):
         expectations = [
-            ("testarrow", (False, ("arrow", ""), "testarrow")),
+            ("", (False, ("arrow", ""), "")),
             ("->", (True, ("arrow", "->"), "")),
             ("-->", (True, ("arrow", "-->"), "")),
             ("a->", (False, ("arrow", ""), "a->")),
@@ -122,7 +126,7 @@ class WsdParserTests(TestCase):
 
     def test_can_parse_signal_body_line(self):
         expectations = [
-            ("", (True, ("signal_body_line", ""), "")),
+            ("", (False, ("signal_body_line", ""), "")),
             ("test", (True, ("signal_body_line", "test"), "")),
             (" test ", (True, ("signal_body_line", " test "), "")),
             ("test\n", (True, ("signal_body_line", "test"), "\n")),
@@ -154,7 +158,18 @@ class WsdParserTests(TestCase):
              (True, 
               ("statement_list",
                (EXAMPLE_SIGNAL_PARSED,
-                EXAMPLE_SIGNAL_PARSED)), ""))]
+                ("interstatement_ws", "\n"),
+                EXAMPLE_SIGNAL_PARSED,
+                ("eof", ""))), "")),
+            ('\n'.join([EXAMPLE_SIGNAL] * 3), 
+             (True, 
+              ("statement_list",
+               (EXAMPLE_SIGNAL_PARSED,
+                ("interstatement_ws", "\n"),
+                EXAMPLE_SIGNAL_PARSED,
+                ("interstatement_ws", "\n"),
+                EXAMPLE_SIGNAL_PARSED,
+                ("eof", ""))), ""))]
         self._check_expectations(
             expectations,
             wsd_parser)

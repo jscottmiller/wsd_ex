@@ -60,7 +60,7 @@ class WsdParserTests(TestCase):
 
     def test_can_parse_arrow(self):
         expectations = [
-            ("", (False, ("arrow", ""), "")),
+            ("testarrow", (False, ("arrow", ""), "testarrow")),
             ("->", (True, ("arrow", "->"), "")),
             ("-->", (True, ("arrow", "-->"), "")),
             ("a->", (False, ("arrow", ""), "a->")),

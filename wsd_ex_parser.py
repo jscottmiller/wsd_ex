@@ -24,9 +24,17 @@ def logged(f):
 
 @logged
 def wsd_parser(diagram):
-    return one_or_many_parser(
+    return list_parser(
         "statement_list",
-        statement_parser,
+        [statement_parser,
+         partial(
+             or_parser,
+             "statement",
+             [partial(empty_parser, "nop"),
+              partial(
+                  sequence_parser,
+                  [partial(text_parser, "newline", "\n"),
+                   statement_parser])])],
         diagram)
 
 
@@ -34,8 +42,8 @@ def wsd_parser(diagram):
 def statement_parser(diagram):
     return or_parser(
         "statement",
-        diagram,
-        signal_parser)
+        [signal_parser],
+        diagram)
 
 
 @logged
@@ -73,37 +81,33 @@ def signal_participants_parser(diagram):
 @logged
 def left_participant_parser(diagram):
     return sequence_parser(
-        "participant",
-        diagram,
-        leading_whitespace_parser,
-        partial(not_parser, "", arrow_parser, match_empty=False))
+        [leading_whitespace_parser,
+         partial(not_parser, "participant", arrow_parser, match_empty=False)],
+        diagram)
 
 
 @logged
 def right_participant_parser(diagram):
     return sequence_parser(
-        "participant",
-        diagram,
-        leading_whitespace_parser,
-        partial(not_parser, "", colon_parser, match_empty=False))
+        [leading_whitespace_parser,
+         partial(not_parser, "participant", colon_parser, match_empty=False)],
+        diagram)
 
 
 @logged
 def identifier_parser(diagram):
     return sequence_parser(
-        "identifier",
-        diagram,
-        leading_whitespace_parser,
-        partial(re_parser, "", ID_RE))
+        [leading_whitespace_parser,
+         partial(re_parser, "identifier", ID_RE)],
+        diagram)
 
 
 @logged
 def arrow_parser(diagram):
    return sequence_parser(
-        "arrow",
-        diagram,
-        leading_whitespace_parser,
-        partial(re_parser, "", ARROW_RE))
+        [leading_whitespace_parser,
+         partial(re_parser, "arrow", ARROW_RE)],
+        diagram)
 
 
 @logged
@@ -124,13 +128,25 @@ def one_or_many_parser(name, parser, diagram):
 
 
 @logged
-def sequence_parser(name, diagram, *parsers):
-    result = (True, (name, ""), diagram)
+def list_parser(name, parsers, diagram):
+    results = []
+    for parser in parsers:
+        result = parser(diagram)
+        if not result[0]:
+            return (False, (name, ()), diagram)
+        diagram = result[2]
+        results.append(result[1])
+    return (True, (name, tuple(results)), diagram)
+
+
+@logged
+def sequence_parser(parsers, diagram):
+    result = (False, ("empty_sequence", ""), diagram)
     for parser in parsers:
         result = parser(result[2])
         if not result[0]:
-            return (False, (name, ""), diagram)
-    return (result[0], (name, result[1][1]), result[2])
+            return (False, (result[1][0], ""), diagram)
+    return result
 
 
 @logged
@@ -150,7 +166,7 @@ def not_parser(name, parser, diagram, match_empty=True):
 
 
 @logged
-def or_parser(name, diagram, *parsers):
+def or_parser(name, parsers, diagram):
     for parser in parsers:
         result = parser(diagram)
         if result[0]:

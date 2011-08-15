@@ -5,7 +5,6 @@ from sys import stdin
 
 
 def wsd_gen(ast):
-    print ast
     return statement_list_gen(ast)
 
 

@@ -5,15 +5,16 @@ from functools import partial
 from wsd_ex_parser import * 
 
 
-EXAMPLE_SIGNAL = "alice->bob:\ntest"
+EXAMPLE_SIGNAL = "alice->bob:\n test"
 EXAMPLE_SIGNAL_PARSED = (
     "signal",
     (("signal_participants",
      (("participant", "alice"),
       ("arrow", "->"),
       ("participant", "bob"))),
-      ("colon", ":"),
-      ("signal_body_line", "test")))
+     ("colon", ":"),
+     ("signal_body",
+      (("signal_body_line", "test"),))))
 
 
 class WsdParserTests(TestCase):

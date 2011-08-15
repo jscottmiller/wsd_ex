@@ -9,6 +9,7 @@ from logging import info, basicConfig
 ID_RE = compile("\w+")
 ARROW_RE = compile("\-\-?>")
 WS_RE = compile("[ \t]*")
+BLOCK_WS_RE = compile("[ \t]+")
 INTER_STATEMENT_WS_RE = compile("[ \t\n\r]*\n")
 
 
@@ -37,7 +38,6 @@ def wsd_parser(diagram):
         "statement_list",
         [
             statement_parser,
-            line_ending_or_eof_parser
         ],
         diagram))
 
@@ -60,7 +60,7 @@ def signal_parser(diagram):
             signal_participants_parser,
             colon_parser,
             interstatement_whitespace_parser,
-            signal_body_line_parser
+            signal_body_parser
         ],
         diagram))
 
@@ -78,6 +78,11 @@ def signal_body_parser(diagram):
             line_ending_or_eof_parser
         ],
         diagram))
+
+
+@logged
+def block_whitespace_parser(diagram):
+    return re_parser("block_ws", BLOCK_WS_RE, diagram)
 
 
 @logged

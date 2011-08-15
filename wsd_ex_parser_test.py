@@ -5,7 +5,7 @@ from functools import partial
 from wsd_ex_parser import * 
 
 
-EXAMPLE_SIGNAL = "alice->bob:test"
+EXAMPLE_SIGNAL = "alice->bob:\ntest"
 EXAMPLE_SIGNAL_PARSED = (
     "signal",
     (("signal_participants",
@@ -134,6 +134,31 @@ class WsdParserTests(TestCase):
         self._check_expectations(
             expectations,
             signal_body_line_parser)
+
+    def test_can_parse_signal_body(self):
+        expectations = [
+            ("", (False, ("signal_body", ()), "")),
+            ("test", 
+             (True, 
+              ("signal_body", 
+               (("signal_body_line", "test"),)), "")),
+            (" test", 
+             (True, 
+              ("signal_body", 
+               (("signal_body_line", "test"),)), "")),
+            (" test\n test", 
+             (True, 
+              ("signal_body", 
+               (("signal_body_line", "test"),
+                ("signal_body_line", "test"))), "")),
+            (" test\n  test", 
+             (True, 
+              ("signal_body", 
+               (("signal_body_line", "test"),
+                ("signal_body_line", " test"))), ""))]
+        self._check_expectations(
+            expectations,
+            signal_body_parser)
 
     def test_can_parse_signal(self):
         expectations = [

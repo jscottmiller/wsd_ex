@@ -23,23 +23,16 @@ def logged(f):
     return log_call
 
 
+def rm_whitespace(out):
+    status, ast, state = out
+    filtered = filter(
+        lambda t: t[0] not in ["interstatement_ws", "eof"], 
+        ast[1])
+    return (status, (ast[0], tuple(filtered)), state)
+
+
 @logged
 def wsd_parser(diagram):
-    def rm_whitespace(out):
-        status, ast, state = out
-        filtered = filter(
-            lambda t: t[0] not in ["interstatement_ws", "eof"], 
-            ast[1])
-        return (status, (ast[0], tuple(filtered)), state)
-
-    line_ending_or_eof_parser = partial(
-        or_parser,
-        "ignored",
-        [
-            eof_parser,
-            interstatement_whitespace_parser
-        ])
-
     return rm_whitespace(one_or_many_parser(
         "statement_list",
         [
@@ -61,27 +54,45 @@ def statement_parser(diagram):
 
 @logged
 def signal_parser(diagram):
-    return list_parser(
+    return rm_whitespace(list_parser(
         "signal",
         [
             signal_participants_parser,
             colon_parser,
+            interstatement_whitespace_parser,
             signal_body_line_parser
         ],
-        diagram)
+        diagram))
+
+
+@logged
+def signal_body_parser(diagram):
+    leading = leading_whitespace_parser(diagram)
+    return rm_whitespace(one_or_many_parser(
+        "signal_body",
+        [
+            partial(
+                block_parser,
+                leading[1][1],
+                signal_body_line_parser),
+            line_ending_or_eof_parser
+        ],
+        diagram))
+
+
+@logged
+def block_parser(leading, parser, diagram):
+    leading = text_parser("block_leading", leading, diagram)
+    if not leading[0]:
+        return leading
+    return parser(leading[2])
 
 
 @logged
 def signal_body_line_parser(diagram):
     return not_parser(
         "signal_body_line", 
-        partial(
-            or_parser,
-            "ignored",
-            [
-                interstatement_whitespace_parser,
-                eof_parser 
-            ]),
+        line_ending_or_eof_parser,
         diagram)
 
 
@@ -167,6 +178,16 @@ def sequence_parser(parsers, diagram):
         if not result[0]:
             return (False, (result[1][0], ""), diagram)
     return result
+
+@logged
+def line_ending_or_eof_parser(diagram):
+    return or_parser(
+        "line_ending_or_eof",
+        [
+            eof_parser,
+            interstatement_whitespace_parser
+        ],
+        diagram)
 
 
 @logged

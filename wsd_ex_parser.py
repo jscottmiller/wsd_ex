@@ -33,7 +33,7 @@ def rm_whitespace(out):
 
 
 @logged
-def wsd_parser(diagram):
+def wsd_ex_parser(diagram):
     return rm_whitespace(one_or_many_parser(
         "statement_list",
         [

@@ -193,7 +193,7 @@ class WsdParserTests(TestCase):
                 EXAMPLE_SIGNAL_PARSED)), ""))]
         self._check_expectations(
             expectations,
-            wsd_parser)
+            wsd_ex_parser)
 
     def _check_expectations(self, expectations, function):
         for input, expected in expectations:

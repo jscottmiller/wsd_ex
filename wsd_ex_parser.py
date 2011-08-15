@@ -24,8 +24,8 @@ def logged(f):
     return log_call
 
 
-def rm_whitespace(out):
-    status, ast, state = out
+def rm_whitespace(parse_result):
+    status, ast, state = parse_result
     filtered = filter(
         lambda t: t[0] not in ["interstatement_ws", "eof"], 
         ast[1])
@@ -34,12 +34,12 @@ def rm_whitespace(out):
 
 @logged
 def wsd_ex_parser(diagram):
-    return rm_whitespace(one_or_many_parser(
+    return one_or_many_parser(
         "statement_list",
         [
             statement_parser,
         ],
-        diagram))
+        diagram)
 
 
 @logged

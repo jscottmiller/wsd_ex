@@ -24,7 +24,7 @@ def logged(f):
     return log_call
 
 
-def rm_whitespace(parse_result):
+def rm_invisible(parse_result):
     status, ast, state = parse_result
     filtered = filter(
         lambda t: t[0] not in ["interstatement_ws", "eof"], 
@@ -54,7 +54,7 @@ def statement_parser(diagram):
 
 @logged
 def signal_parser(diagram):
-    return rm_whitespace(list_parser(
+    return rm_invisible(list_parser(
         "signal",
         [
             signal_participants_parser,
@@ -68,7 +68,7 @@ def signal_parser(diagram):
 @logged
 def signal_body_parser(diagram):
     leading = leading_whitespace_parser(diagram)
-    return rm_whitespace(one_or_many_parser(
+    return rm_invisible(one_or_many_parser(
         "signal_body",
         [
             partial(

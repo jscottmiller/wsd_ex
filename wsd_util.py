@@ -38,9 +38,6 @@ class WsdException(Exception):
 if __name__ == '__main__':
     wsd = stdin.read()
     img = wsd_image_url(wsd)
-    if not img:
-        print "Error retrieving wsd."
-    else:
-        urlretrieve("http://www.websequencediagrams.com/" + img, "wsd.png")
+    urlretrieve("http://www.websequencediagrams.com/" + img, "wsd.png")
 
 

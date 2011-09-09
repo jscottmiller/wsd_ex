@@ -139,10 +139,7 @@ class WsdParserTests(TestCase):
     def test_can_parse_signal_body(self):
         expectations = [
             ("", (False, ("signal_body", ()), "")),
-            ("test", 
-             (True, 
-              ("signal_body", 
-               (("signal_body_line", "test"),)), "")),
+            ("test", (False, ("signal_body", ()), "test")),
             (" test", 
              (True, 
               ("signal_body", 
@@ -194,6 +191,15 @@ class WsdParserTests(TestCase):
         self._check_expectations(
             expectations,
             wsd_ex_parser)
+
+    def test_can_parse_participant_keyword(self):
+        expectations = [
+            ("", (False, ("participant_keyword", ""), "")),
+            ("participant", (True, ("participant_keyword", "participant"), "")),
+            (" participant", (False, ("participant_keyword", ""), " participant"))]
+        self._check_expectations(
+            expectations,
+            participant_keyword_parser)
 
     def _check_expectations(self, expectations, function):
         for input, expected in expectations:

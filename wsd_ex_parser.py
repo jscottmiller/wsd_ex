@@ -9,7 +9,8 @@ from logging import info, basicConfig
 ID_RE = compile("\w+")
 ARROW_RE = compile("\-\-?>")
 WS_RE = compile("[ \t]*")
-BLOCK_WS_RE = compile("[ \t]+")
+NON_EMPTY_WS_RE = compile("[ \t]+")
+NON_EMPTY_WS_RE = compile("[ \t]+")
 INTER_STATEMENT_WS_RE = compile("[ \t\n\r]*\n")
 
 
@@ -67,7 +68,9 @@ def signal_parser(diagram):
 
 @logged
 def signal_body_parser(diagram):
-    leading = leading_whitespace_parser(diagram)
+    leading = non_empty_leading_whitespace_parser(diagram)
+    if not leading[0]:
+        return (False, ("signal_body", ()), diagram)   
     return rm_invisible(one_or_many_parser(
         "signal_body",
         [
@@ -78,11 +81,6 @@ def signal_body_parser(diagram):
             line_ending_or_eof_parser
         ],
         diagram))
-
-
-@logged
-def block_whitespace_parser(diagram):
-    return re_parser("block_ws", BLOCK_WS_RE, diagram)
 
 
 @logged
@@ -151,6 +149,11 @@ def colon_parser(diagram):
 
 
 @logged
+def participant_keyword_parser(diagram):
+    return text_parser("participant_keyword", "participant", diagram)
+
+
+@logged
 def one_or_many_parser(name, parsers, diagram):
     results = []
     while True:
@@ -203,6 +206,11 @@ def interstatement_whitespace_parser(diagram):
 @logged
 def leading_whitespace_parser(diagram):
     return re_parser("ws", WS_RE, diagram)
+
+
+@logged
+def non_empty_leading_whitespace_parser(diagram):
+    return re_parser("ws", NON_EMPTY_WS_RE, diagram)
 
 
 @logged
